@@ -1,6 +1,6 @@
-DROP DATABASE onlineStore;
 CREATE USER 'adminTienda'@'localhost' IDENTIFIED BY 'passwordTienda';
 
+DROP DATABASE onlineStore;
 CREATE DATABASE onlineStore;
 use onlineStore;
 

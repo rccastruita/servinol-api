@@ -5,20 +5,21 @@ var foo = {
     password: 'password',
     name: 'trollencio',
     role: 'client'
-}
+};
 
-userModel.insert(foo);
+//userModel.insert(foo);
 
-/* // Async select test
+// Async select test
 (async () => {
     try {
-        var foo = await userModel.select("micorreo@mail.com");
+        var foo = await userModel.select("miotrocorreo@mail.com");
         console.log(JSON.stringify(foo));
     }
     catch(error) {
+        console.error("--- PROMISE REJECTED ---");
         console.error(error);
     }
-})();*/
+})();
 
 /* // password hash test
 const bcrypt = require('bcrypt');
