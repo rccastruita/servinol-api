@@ -1,14 +1,18 @@
-CREATE DATABASE IF NOT EXISTS onlineStore;
+DROP DATABASE onlineStore;
+CREATE USER 'adminTienda'@'localhost' IDENTIFIED BY 'passwordTienda';
+
+CREATE DATABASE onlineStore;
 use onlineStore;
-CREATE TABLE users(
+
+CREATE TABLE user(
     email varchar(150) NOT NULL,
-    password varchar(500) NOT NULL,
+    password varchar(60) NOT NULL,
     name varchar(150) NOT NULL,
-    role INT(1) NOT NULL,
+    role ENUM('client', 'admin') DEFAULT 'client',
     PRIMARY KEY (email)
 );
 
-CREATE TABLE products(
+CREATE TABLE product(
 	id INT NOT NULL AUTO_INCREMENT,
     name varchar(200) NOT NULL,
     description text NOT NULL,
@@ -18,42 +22,31 @@ CREATE TABLE products(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE carts(
+CREATE TABLE cart(
 	id INT NOT NULL AUTO_INCREMENT,
     user_email varchar(150) NOT NULL,
     product_id INT NOT NULL,
     quantity INT NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_email) REFERENCES user(email),
+    FOREIGN KEY (product_id) REFERENCES product(id)
 );
 
-CREATE TYPE user_object AS OBJECT(
-	email varchar(150),
-    password varchar(500),
-    name varchar(150),
-    role INT(1)
+CREATE TABLE purchase(
+    id INT NOT NULL AUTO_INCREMENT,
+    user_email varchar(150) NOT NULL,
+    purchase_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_email) REFERENCES user(email)
 );
 
-DELIMITER //
-CREATE PROCEDURE userAddOrEdit (
-	IN _email varchar(150),
-	IN _password varchar(500),
-    IN _name varchar(150),
-    IN _role INT(1),
-    OUT _user INT
-)
-BEGIN
-	IF _email NOT IN (SELECT email from users) THEN
-		INSERT INTO users (email, password, name, role)
-		VALUES(_email, _password, _name, _role);
-	ELSE
-		UPDATE users
-        SET
-            password = _password,
-            name = _name,
-            role = _role
-			WHERE email = _email;
-	END IF;
-    SELECT * FROM users where email like _email;
-END;
-DELIMITER;
+CREATE TABLE purchase_item(
+    purchase_id int NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    PRIMARY KEY (purchase_id, product_id),
+    FOREIGN KEY (purchase_id) REFERENCES purchase(id),
+    FOREIGN KEY (product_id) REFERENCES product(id)
+);
 
+GRANT ALL PRIVILEGES ON onlineStore.* TO 'adminTienda'@'localhost';
