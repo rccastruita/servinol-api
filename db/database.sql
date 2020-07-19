@@ -22,7 +22,7 @@ CREATE TABLE product(
     PRIMARY KEY (id)
 );
 
-CREATE TABLE cart(
+CREATE TABLE cart_item(
 	id INT NOT NULL AUTO_INCREMENT,
     user_email varchar(150) NOT NULL,
     product_id INT NOT NULL,

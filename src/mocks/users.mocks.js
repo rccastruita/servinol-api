@@ -1,12 +1,5 @@
 const userModel = require('../models/user.model');
 
-/*var foo = new User(
-    'micorreo@mail.com',
-    'contraseña',
-    'fuckencio',
-    'client'
-);*/
-
 var foo = {
     email: 'miotrocorreo@mail.com',
     password: 'password',
@@ -14,6 +7,36 @@ var foo = {
     role: 'client'
 }
 
-//model.insertUser(foo);
+userModel.insert(foo);
 
-userModel.selectUser('micorreo@mail.com');
+/* // Async select test
+(async () => {
+    try {
+        var foo = await userModel.select("micorreo@mail.com");
+        console.log(JSON.stringify(foo));
+    }
+    catch(error) {
+        console.error(error);
+    }
+})();*/
+
+/* // password hash test
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+const myPlainPassword = 'hola';
+
+var myHash, mySalt;
+
+bcrypt.genSalt(saltRounds, function(err, salt) {
+    mySalt = salt;
+    console.log('password: ' + myPlainPassword);
+    console.log('salt: ' + salt);
+    bcrypt.hash(myPlainPassword, salt, function(err, hash) {
+        console.log('hash: ' + hash);
+        myHash = hash;
+        console.log('hash length: ' + myHash.length);
+
+        console.log(bcrypt.compareSync('hola', myHash));
+    });
+});*/

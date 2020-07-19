@@ -1,19 +1,23 @@
 const mysqlConnection = require('../database');
 const userModel = {};
 
-userModel.select = (email) => {
-    mysqlConnection.query("SELECT * FROM user WHERE email = ?", [email], (error, results, fields) => {
-        if(error) {
-            return undefined;
-        }
-        else {
-            if (Array.isArray(results) && results.length > 0) {
-                return results[0];
+userModel.select = async (email) => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("SELCT * FROM user WHERE email = ?", [email], 
+        (error, results) => {
+            if(error) {
+                reject(undefined);
             }
             else {
-                return undefined;
+                if (Array.isArray(results) && results.length > 0) {
+                    resolve(results[0]);
+                }
+                else {
+                    console.log("not found");
+                    resolve(undefined);
+                }
             }
-        }
+        });
     });
 }
 
@@ -25,7 +29,7 @@ userModel.insert = (user) => {
             user.password,
             user.name,
             user.role
-        ], (error, results, fields) => {
+        ], (error) => {
             if (error) {
                 console.log(error);
             }
