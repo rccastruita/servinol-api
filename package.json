@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "eslint": "^7.4.0",
+    "node-random-name": "^1.0.1",
     "nodemon": "^2.0.4"
   }
 }

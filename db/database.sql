@@ -2,6 +2,8 @@ CREATE USER 'adminTienda'@'localhost' IDENTIFIED BY 'passwordTienda';
 
 DROP DATABASE onlineStore;
 CREATE DATABASE onlineStore;
+GRANT ALL PRIVILEGES ON onlineStore.* TO 'adminTienda'@'localhost';
+
 use onlineStore;
 
 CREATE TABLE user(
@@ -49,4 +51,23 @@ CREATE TABLE purchase_item(
     FOREIGN KEY (product_id) REFERENCES product(id)
 );
 
-GRANT ALL PRIVILEGES ON onlineStore.* TO 'adminTienda'@'localhost';
+DELIMITER $$
+
+CREATE TRIGGER before_purchase_delete
+BEFORE DELETE ON purchase FOR EACH ROW
+BEGIN
+	DELETE FROM purchase_item
+	WHERE purchase_id = OLD.id;
+END$$
+
+CREATE TRIGGER before_user_delete
+BEFORE DELETE ON user FOR EACH ROW
+BEGIN
+	DELETE FROM cart_item
+	WHERE user_email = OLD.email;
+
+	DELETE FROM purchase
+	WHERE user_email = OLD.email;
+END$$
+
+DELIMITER ;
