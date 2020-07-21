@@ -45,7 +45,7 @@ productModel.insert = async (product) => {
                 }
                 else {
                     resolve({
-                        code: 201,
+                        code: 200,
                         body: {
                             message: "Registration complete",
                             info: "Product registered succesfully."

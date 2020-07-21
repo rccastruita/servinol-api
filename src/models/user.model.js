@@ -17,11 +17,7 @@ userModel.getAll = async () => {
             else {
                 resolve({
                     code: 200,
-                    body: {
-                        message: "Data retrieved",
-                        info: "List of users retrieved.",
-                        users: results
-                    }
+                    body: results
                 });
             }
         });
@@ -50,7 +46,7 @@ userModel.insert = async (user) => {
                 }
                 else {
                     resolve({
-                        code: 201,
+                        code: 200,
                         body: {
                             message: "Registration complete",
                             info: "User account registered succesfully."
@@ -78,10 +74,7 @@ userModel.select = async (email) => {
             else if (Array.isArray(results) && results.length > 0) {
                 resolve({
                     code: 200,
-                    body: {
-                        message: "User found",
-                        user: results[0]
-                    }
+                    body: results[0]
                 });
             }
             else {

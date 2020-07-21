@@ -21,7 +21,7 @@ purchaseItemModel.insert = async (purchaseItem) => {
                 }
                 else {
                     resolve({
-                        code: 201,
+                        code: 200,
                         body: {
                             message: "Registration complete",
                             info: "Purchase item registered succesfully."

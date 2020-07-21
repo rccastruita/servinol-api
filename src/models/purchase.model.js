@@ -45,7 +45,7 @@ purchaseModel.insert = async (user_email) => {
                 }
                 else {
                     resolve({
-                        code: 201,
+                        code: 200,
                         body: {
                             message: "Purchase registered",
                             info: "Purchase registered succesfully."

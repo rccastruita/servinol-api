@@ -21,7 +21,7 @@ cartItemModel.insert = async (cartItem) => {
                 }
                 else {
                     resolve({
-                        code: 201,
+                        code: 200,
                         body: {
                             message: "Item added",
                             info: "Item added to the cart succesfully."
