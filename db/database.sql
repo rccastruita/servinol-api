@@ -22,7 +22,7 @@ CREATE TABLE product(
     name varchar(200) NOT NULL,
     description text NOT NULL,
     price DOUBLE(8,2) NOT NULL,
-    slug varchar(500), NOT NULL,
+    slug varchar(500) NOT NULL,
     image varchar(200) NOT NULL,
     PRIMARY KEY (id)
 );
@@ -37,8 +37,8 @@ CREATE TABLE product_is_genre(
     product_id INT NOT NULL,
     genre_id INT NOT NULL,
     PRIMARY KEY(product_id, genre_id),
-    FOREIGN KEY(product_id) REFERENCES product.id,
-    FOREIGN KEY(genre_id) REFERENCES genre.id
+    FOREIGN KEY(product_id) REFERENCES product(id),
+    FOREIGN KEY(genre_id) REFERENCES genre(id)
 );
 
 CREATE TABLE platform(
@@ -49,15 +49,15 @@ CREATE TABLE platform(
 
 CREATE TABLE product_on_platform(
     product_id INT NOT NULL,
-    genre_id INT NOT NULL,
+    platform_id INT NOT NULL,
     PRIMARY KEY(product_id, platform_id),
-    FOREIGN KEY(product_id) REFERENCES product.id,
-    FOREIGN KEY(platform_id) REFERENCES platform.id
+    FOREIGN KEY(product_id) REFERENCES product(id),
+    FOREIGN KEY(platform_id) REFERENCES platform(id)
 );
 
 CREATE TABLE cart_item(
 	id INT NOT NULL AUTO_INCREMENT,
-    user_id varchar(150) NOT NULL,
+    user_id INT NOT NULL,
     product_id INT NOT NULL,
     quantity INT NOT NULL,
     PRIMARY KEY (id),
@@ -67,7 +67,7 @@ CREATE TABLE cart_item(
 
 CREATE TABLE purchase(
     id INT NOT NULL AUTO_INCREMENT,
-    user_id varchar(150) NOT NULL,
+    user_id INT NOT NULL,
     purchase_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     FOREIGN KEY (user_id) REFERENCES user(id)
@@ -83,6 +83,14 @@ CREATE TABLE purchase_item(
 );
 
 DELIMITER $$
+
+CREATE TRIGGER before_user_insert
+BEFORE INSERT ON user FOR EACH ROW
+BEGIN 
+    IF NEW.email IN (SELECT email FROM user) THEN
+        SET NEW.email = NULL;
+    END IF;
+END$$
 
 CREATE TRIGGER before_purchase_delete
 BEFORE DELETE ON purchase FOR EACH ROW
