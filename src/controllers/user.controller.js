@@ -1,13 +1,14 @@
 const userModel = require('../models/user.model');
 const auth = require('../auth');
+const bcrypt = require('bcrypt');
 
 const userController = {};
 
 userController.get = async (req, res) => {
-    console.log("GET request to /users/" + req.params.email);
+    console.log("GET request to /users/" + req.params.id);
     
     var isAuthorized = await auth.checkAuthorization(req.headers.authorization, {
-        sub: req.params.email,
+        sub: req.params.id,
         mod: 1,
         minConditions: 1
     });
@@ -26,7 +27,7 @@ userController.get = async (req, res) => {
     console.dir(isAuthorized);
     try {
         console.log("Request accepted");
-        var user = await userModel.select(req.params.email);
+        var user = await userModel.select(req.params.id);
         console.log("Request successful");
         res.status(200).send(user);
     } catch(error) {
@@ -103,11 +104,11 @@ userController.post = async (req, res) => {
 }
 
 userController.put = async (req, res) => {
-    console.log("PUT request to /users/" + req.params.email);
+    console.log("PUT request to /users/" + req.params.id);
 
-    if(req.body.email) {
-        console.log("Request rejected: Tried to update id");
-        return res.status(400).send("Tried to update id");
+    if(req.body.id || req.body.email) {
+        console.log("Request rejected: Tried to update fixed value");
+        return res.status(400).send("Tried to update fixed value");
     }
 
     if(req.body.password) {
@@ -123,7 +124,7 @@ userController.put = async (req, res) => {
         };
     else 
         authorization_needed = {
-            sub: req.params.email,
+            sub: req.params.id,
             mod: 1,
             minConditions: 1
         };
@@ -141,7 +142,7 @@ userController.put = async (req, res) => {
     }
 
     try {
-        await userModel.update(req.params.email, req.body);
+        await userModel.update(req.params.id, req.body);
         console.log("Request successful");
         return res.status(204).send("");
     } catch(error) {
@@ -152,10 +153,10 @@ userController.put = async (req, res) => {
 }
 
 userController.delete = async (req, res) => {
-    console.log("DELETE request on /users/" + req.params.email);
+    console.log("DELETE request on /users/" + req.params.id);
 
     var isAuthorized = await auth.checkAuthorization(req.headers.authorization, {
-        sub: req.params.email,
+        sub: req.params.id,
         mod: 1,
         minConditions: 1
     });
@@ -172,7 +173,7 @@ userController.delete = async (req, res) => {
     
     console.log("Request accepted");
     try {
-        affectedRows = await userModel.delete(req.params.email);
+        affectedRows = await userModel.delete(req.params.id);
 
         if(affectedRows == 0) {
             console.log("Request failed: User not found");
@@ -187,5 +188,39 @@ userController.delete = async (req, res) => {
         return res.status(500).send("Request failed: Internal error");
     }
 }
+
+userController.login = async (req, res) => {
+    console.log("POST requested at /users/login");
+    console.dir(req.body);
+
+    try {
+        var user = await userModel.selectEmail(req.body.email);
+        console.log("User found for id: " + user.email);
+
+        bcrypt.compare(req.body.password, user.password, (error, result) => {
+            if(error) {
+                console.error(error);
+                return res.status(500).send(error.message);
+            }
+            if(result) { // Correct password
+                console.log("Authentication succesfull, sending token...");
+                return res.status(200).json(auth.createToken(user));
+            }
+            else {  // Wrong password
+                console.log("Wrong password");
+                return res.status(401).json("Wrong credentials");
+            }
+        });
+    } catch(error) {
+        if(error) {
+            console.error(error);
+            return res.status(500).send(error);
+        }
+        else {
+            console.log("User not found");
+            return res.status(401).send("Wrong credentials");
+        }
+    }
+};
 
 module.exports = userController;

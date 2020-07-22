@@ -16,6 +16,7 @@ userModel.insert = async (user) => {
                 }
                 else {
                     console.log("Created user id: ", results.insertId);
+                    user.id = results.insertId;
                     resolve(user);
                 }
             }
@@ -36,9 +37,26 @@ userModel.getAll = async () => {
     });
 };
 
-userModel.select = async (email) => {
+userModel.selectEmail = async (email) => {
     return new Promise((resolve, reject) => {
         mysqlConnection.query("SELECT * FROM user WHERE email = ?", [email], 
+        (error, results) => {
+            if(error) {
+                reject(error);
+            }
+            else if (Array.isArray(results) && results.length > 0) {
+                resolve(results[0]);
+            }
+            else {
+                reject();
+            }
+        });
+    });
+};
+
+userModel.select = async (id) => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("SELECT * FROM user WHERE id = ?", [id],
         (error, results) => {
             if(error) {
                 reject(error);
@@ -60,7 +78,7 @@ userModel.update = async (id, data) => {
             query_string += key + " = ?,";
         });
         
-        query_string = query_string.substring(0, query_string.length-1) + " WHERE email = ?";
+        query_string = query_string.substring(0, query_string.length-1) + " WHERE id = ?";
         query_data = Object.values(data);
         query_data.push(id);
 
@@ -78,11 +96,11 @@ userModel.update = async (id, data) => {
     });
 };
 
-userModel.delete = async (email) => {
+userModel.delete = async (id) => {
     return new Promise((resolve, reject) => {
         mysqlConnection.query(
-            "DELETE FROM user WHERE email = ?",
-            [email],
+            "DELETE FROM user WHERE id = ?",
+            [id],
             (error, results) => {
                 if (error) {
                     reject(error);

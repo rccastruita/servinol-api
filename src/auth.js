@@ -6,20 +6,6 @@ auth = {};
 
 
 const TOKEN_SECRET = "jvvL7rdRr1xBjETS79Wh";
-const FORBIDDEN = {
-    code: 403,
-    body: {
-        message: "Forbidden",
-        info: "Access denied."
-    }
-}
-const EXPIRED = {
-    code: 401,
-    body: {
-        message: "Token expired", 
-        info: "The current session has expired, please login again."
-    }
-}
 
 auth.prepareUser = async (user) => {
     return new Promise((resolve) => {
@@ -42,48 +28,10 @@ auth.hashPassword = async (password) => {
     })
 }
 
-auth.login = async (req, res) => {
-    console.log("POST requested at /auth/login");
-    console.dir(req.body);
-
-    try {
-        var user = await userModel.select(req.body.email);
-        console.log("User found for email: " + user.email);
-
-        bcrypt.compare(req.body.password, user.password, (error, result) => {
-            if(error) {
-                console.error(error);
-                return res.status(500).send(error.message);
-            }
-            if(result) { // Correct password
-                console.log("Authentication succesfull, sending token...");
-                return res.status(200).json(auth.createToken(user));              
-            }
-            else {  // Wrong password
-                console.log("Wrong password");
-                return res.status(401).json("Wrong credentials");
-            }
-        });
-    } catch(error) {
-        if(error) {
-            console.error(error);
-            return res.status(500).send(error);
-        }
-        else {
-            console.log("User not found");
-            return res.status(401).send("Wrong credentials");
-        }
-    }
-};
-
-auth.signup = async (req, res) => {
-    
-};
-
 auth.createToken = (user) => {
     console.log("Generating token for: ")
     var payload = {
-        sub: user.email,
+        sub: user.id,
         iat: moment().unix(),
         exp: moment().add(15, "minutes").unix(),
         mod: user.role == "admin" ? 1 : 0
@@ -93,13 +41,6 @@ auth.createToken = (user) => {
     var header = "Bearer " + jwt.encode(payload, TOKEN_SECRET);
     console.log("Token generated: " + header);
     return header;
-};
-
-// Test function
-auth.private = async (req, res) => {
-    response = await auth.checkAuthorization(req.headers.authorization, {mod: 0});
-
-    res.send(response);
 };
 
 auth.checkAuthorization = async (authorization, condition) => {
