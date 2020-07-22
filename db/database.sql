@@ -19,9 +19,37 @@ CREATE TABLE product(
     name varchar(200) NOT NULL,
     description text NOT NULL,
     price DOUBLE(8,2) NOT NULL,
-    slug varchar(500) NOT NULL,
+    slug varchar(500),
     image varchar(200) NOT NULL,
     PRIMARY KEY (id)
+);
+
+CREATE TABLE genre(
+    id INT NOT NULL AUTO_INCREMENT,
+    name varchar(50) NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE product_is_genre(
+    product_id INT NOT NULL,
+    genre_id INT NOT NULL,
+    PRIMARY KEY(product_id, genre_id),
+    FOREIGN KEY(product_id) REFERENCES product.id,
+    FOREIGN KEY(genre_id) REFERENCES genre.id
+);
+
+CREATE TABLE platform(
+    id INT NOT NULL,
+    name varchar(50) NOT NULL,
+    PRIMARY KEY(id)
+);
+
+CREATE TABLE product_on_platform(
+    product_id INT NOT NULL,
+    genre_id INT NOT NULL,
+    PRIMARY KEY(product_id, platform_id),
+    FOREIGN KEY(product_id) REFERENCES product.id,
+    FOREIGN KEY(platform_id) REFERENCES platform.id
 );
 
 CREATE TABLE cart_item(

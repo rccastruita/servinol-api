@@ -17,11 +17,7 @@ productModel.getAll = async () => {
             else {
                 resolve({
                     code: 200,
-                    body: {
-                        message: "Data retrieved",
-                        info: "List of products retrieved.",
-                        products: results
-                    }
+                    body: results
                 });
             }
         });
@@ -39,7 +35,8 @@ productModel.insert = async (product) => {
                         code: 500,
                         body: {
                             message: "Internal error", 
-                            info: "An error ocurred while trying to submit the data"
+                            info: "An error ocurred while trying to submit the data",
+                            error: error
                         }
                     });
                 }
@@ -73,10 +70,7 @@ productModel.select = async (id) => {
             else if (Array.isArray(results) && results.length > 0) {
                 resolve({
                     code: 200,
-                    body: {
-                        message: "Product found",
-                        product: results[0]
-                    }
+                    body: results[0]
                 });
             }
             else {

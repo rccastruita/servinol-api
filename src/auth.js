@@ -4,6 +4,22 @@ const jwt = require('jwt-simple');
 const moment = require('moment');
 
 const TOKEN_SECRET = "jvvL7rdRr1xBjETS79Wh";
+const FORBIDDEN = {
+    code: 403,
+    body: {
+        message: "Forbidden",
+        info: "Access denied."
+    }
+}
+const EXPIRED = {
+    code: 401,
+    body: {
+        message: "Token expired", 
+        info: "The current session has expired, please login again."
+    }
+}
+
+
 
 auth = {};
 
@@ -50,35 +66,64 @@ auth.createToken = (user) => {
     var payload = {
         sub: user.email,
         iat: moment().unix(),
-        exp: moment().add(15, "minutes").unix()
+        exp: moment().add(15, "minutes").unix(),
+        mod: user.role == "admin" ? 1 : 0
     };
 
-    return jwt.encode(payload, TOKEN_SECRET);
+    return "Bearer " + jwt.encode(payload, TOKEN_SECRET);
 };
 
 // Test function
 auth.private = async (req, res) => {
-    console.log("Requesting access to private site");
+    response = await auth.checkAuthorization(req.headers.authorization, {mod: 0});
 
-    if(!req.headers.authorization) {
-        return res.status(403).json({
-            message: "Forbidden", 
-            info: "Access denied to this site"
-        });
-    }
-    var payload = jwt.decode(req.headers.authorization, TOKEN_SECRET);
-    console.dir(payload);
+    res.send(response);
+};
 
-    console.log("Now: " + moment().unix());
+auth.checkAuthorization = async (authorization, condition, callback) => {
+    console.log("Validating request token...");
 
-    if(payload.exp <= moment().unix()) {
-        return res.status(401).json({
-            message: "Session expired", 
-            info: "Please login again"
-        });
+    if(authorization === undefined) {
+        return callback(FORBIDDEN);
     }
 
-    res.status(200).send("Access granted");
+
+    const token = authorization.split(" ")[1];
+
+    console.log("Token: " + token);
+    
+    try {
+        var payload = jwt.decode(token, TOKEN_SECRET);
+
+        console.dir(payload);
+        
+        if(condition.mod !== undefined) {
+            console.log("condition.mod: " + condition.mod);
+            if(condition.mod > payload.mod) {
+                callback(FORBIDDEN);
+            }
+        }
+        if(condition.sub !== undefined) {
+            console.log("condition.sub: " + condition.sub);
+            if(condition.sub != payload.sub) {
+                callback(FORBIDDEN);
+            }
+        }
+        
+        callback();
+
+    } catch(error) {
+        console.log("Error: " + error.message);
+        switch(error.message) {
+            case "Token expired":
+                callback(EXPIRED);
+                break;
+            case "Signature verification failed":
+            case "No token supplied":
+                callback(FORBIDDEN);
+                break;
+        }
+    }
 };
 
 module.exports = auth;

@@ -1,16 +1,21 @@
 const express = require('express')
 const app = express();
-const auth = require('./auth');
+const fileUpload = require('express-fileupload');
 
 //Settings
 app.set('port', process.env.PORT || 3000);
 
 //Middlewares
 app.use(express.json());
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: './resources/tmp/'
+}));
 
 //Routes
 app.use('/api/users',require('./routes/user.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/products', require('./routes/product.routes'));
 
 //Starting server
 app.listen(app.get('port'), () => {
