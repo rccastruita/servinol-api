@@ -19,7 +19,7 @@ CREATE TABLE product(
     name varchar(200) NOT NULL,
     description text NOT NULL,
     price DOUBLE(8,2) NOT NULL,
-    slug varchar(500),
+    slug varchar(500), NOT NULL,
     image varchar(200) NOT NULL,
     PRIMARY KEY (id)
 );

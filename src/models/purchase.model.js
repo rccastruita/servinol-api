@@ -1,55 +1,18 @@
 const mysqlConnection = require('../database');
 const purchaseModel = {};
 
-purchaseModel.getAll = async () => {
-    return new Promise((resolve) => {
-        mysqlConnection.query("SELECT * FROM purchase", [], 
-        (error, results) => {
-            if (error) {
-                resolve({
-                    code: 500,
-                    body: {
-                        message: "Internal error",
-                        info: "An error ocurred while trying to retrieve the data.",
-                        error: error
-                    }
-                });
-            }
-            else {
-                resolve({
-                    code: 200,
-                    body: {
-                        message: "Data retrieved",
-                        info: "List of purchases retrieved.",
-                        purchases: results
-                    }
-                });
-            }
-        });
-    });
-}
-
 purchaseModel.insert = async (user_email) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         mysqlConnection.query(
             "INSERT INTO purchase (user_email) VALUES (?)", [user_email], 
-            (error) => {
+            (error, results) => {
                 if (error) {
-                    resolve({
-                        code: 500,
-                        body: {
-                            message: "Internal error", 
-                            info: "An error ocurred while trying to submit the data"
-                        }
-                    });
+                    reject(error);
                 }
                 else {
-                    resolve({
-                        code: 200,
-                        body: {
-                            message: "Purchase registered",
-                            info: "Purchase registered succesfully."
-                        }
+                    mysqlConnection.query("SELECT * FROM purchase WHERE id = ?",
+                    [results.insertId], (nested_error, nested_results) => {
+                        resolve(nested_results[0]);
                     });
                 }
             }
@@ -57,62 +20,45 @@ purchaseModel.insert = async (user_email) => {
     });
 };
 
-purchaseModel.select = async (id) => {
-    return new Promise((resolve) => {
-        mysqlConnection.query("SELECT * FROM purchase WHERE id = ?", [id], (error, results) => {
-            if(error) {
-                resolve({
-                    code: 500,
-                    body: {
-                        message: "Internal error",
-                        info: "An error ocurred while trying to query the data"
-                    }
-                });
-            }
-            else if (Array.isArray(results) && results.length > 0) {
-                resolve({
-                    code: 200,
-                    body: {
-                        message: "Purchase found",
-                        purchase: results[0]
-                    }
-                });
+purchaseModel.getAll = async () => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("SELECT * FROM purchase", [], 
+        (error, results) => {
+            if (error) {
+                reject(error);
             }
             else {
-                resolve({
-                    code: 404,
-                    body: {
-                        message: "Not found",
-                        info: "User not found in the database."
-                    }
-                });
+                resolve(results);
+            }
+        });
+    });
+}
+
+purchaseModel.select = async (id) => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("SELECT * FROM purchase WHERE id = ?", [id], (error, results) => {
+            if(error) {
+                reject(error);
+            }
+            else if (Array.isArray(results) && results.length > 0) {
+                resolve(results[0]);
+            }
+            else {
+                reject();
             }
         });
     });
 };
 
-purchaseModel.update = async (purchase) => {
-    return new Promise((resolve) => {
+purchaseModel.update = async (id, data) => {
+    return new Promise((resolve, reject) => {
         mysqlConnection.query("UPDATE purchase SET purchase_timestamp = ? WHERE id = ?",
-        [purchase.purchase_timestamp, purchase.id], (error) => {
+        [data, id], (error) => {
             if(error) {
-                resolve({
-                    code: 500,
-                    body: {
-                        message: "Internal error",
-                        info: "An error ocurred while trying to update the data.",
-                        error: error
-                    }
-                });
+                reject(error);
             }
             else {
-                resolve({
-                    code: 200,
-                    body: {
-                        message: "Info updated",
-                        info: "Purchase information updated succesfully."
-                    }
-                });
+                resolve();
             }
         }
         )
@@ -120,25 +66,13 @@ purchaseModel.update = async (purchase) => {
 };
 
 purchaseModel.delete = async (id) => {
-    return new Promise((resolve) => {
-        mysqlConnection.query("DELETE FROM purchase WHERE id = ?", [id], (error) => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("DELETE FROM purchase WHERE id = ?", [id], (error, results) => {
             if (error) {
-                resolve({
-                    code: 500,
-                    body: {
-                        message: "Internal error",
-                        info: "An error ocurred while trying to delete the data."
-                    }
-                });
+                reject(error);
             }
             else {
-                resolve({
-                    code: 200,
-                    body: {
-                        message: "Purchase deleted",
-                        info: "The purchase register was deleted succesfully"
-                    }
-                });
+                resolve(results.affectedRows);
             }
         });
     });

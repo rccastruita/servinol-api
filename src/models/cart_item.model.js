@@ -9,24 +9,13 @@ cartItemModel.insert = async (cartItem) => {
                 cartItem.user_email,
                 cartItem.product_id,
                 cartItem.quantity
-            ], (error) => {
+            ], (error, results) => {
                 if (error) {
-                    resolve({
-                        code: 500,
-                        body: {
-                            message: "Internal error", 
-                            info: "An error ocurred while trying to submit the data"
-                        }
-                    });
+                    reject(error);
                 }
                 else {
-                    resolve({
-                        code: 200,
-                        body: {
-                            message: "Item added",
-                            info: "Item added to the cart succesfully."
-                        }
-                    });
+                    cartItem.id = results.insertId;
+                    resolve(cartItem);
                 }
             }
         );
@@ -37,89 +26,48 @@ cartItemModel.select = async (id) => {
     return new Promise((resolve, reject) => {
         mysqlConnection.query("SELECT * FROM cart_item WHERE id = ?", [id], (error, results) => {
             if(error) {
-                resolve({
-                    code: 500,
-                    body: {
-                        message: "Internal error",
-                        info: "An error ocurred while trying to query the data"
-                    }
-                });
+                reject(error);
             }
             else if (Array.isArray(results) && results.length > 0) {
-                resolve({
-                    code: 200,
-                    body: {
-                        message: "Item found",
-                        cartItem: results[0]
-                    }
-                });
+                resolve(results[0]);
             }
             else {
-                resolve({
-                    code: 404,
-                    body: {
-                        message: "Not found",
-                        info: "Item not found in the cart."
-                    }
-                });
+                reject();
             }
         });
     });
 }
 
-cartItemModel.update = async (cartItem) => {
-    return new Promise((resolve) => {
-        mysqlConnection.query("UPDATE cart_item SET user_email = ?, product_id = ?, quantity = ?",
-        [
-            cartItem.user_email,
-            cartItem.product_id,
-            cartItem.quantity
-        ], 
-        (error) => {
+cartItemModel.update = async (id, data) => {
+    return new Promise((resolve, reject) => {
+        var query_string = "UPDATE cart_item SET ";
+        Object.keys(data).forEach((key) => {
+            query_string += key + " = ?,";
+        });
+
+        query_string = query_string.substring(0, query_string.length-1) + " WHERE id = ?";
+        query_data = Object.values(data);
+        query_data.push(id);
+
+        mysqlConnection.query(query_string, query_data, (error, results) => {
             if(error) {
-                resolve({
-                    code: 500,
-                    body: {
-                        message: "Internal error",
-                        info: "An error ocurred while trying to update the data."
-                    }
-                });
+                reject(error);
             }
             else {
-                resolve({
-                    code: 200,
-                    body: {
-                        message: "Info updated",
-                        info: "Cart item information updated succesfully."
-                    }
-                });
+                resolve();
             }
         });
     });
 }
 
 cartItemModel.delete = async (id) => {
-    return new Promise((resolve) => {
-        mysqlConnection.query("DELETE FROM cart_item WHERE id = ?", [id], (error) => {
-            if(error) {
-                if (error) {
-                    resolve({
-                        code: 500,
-                        body: {
-                            message: "Internal error",
-                            info: "An error ocurred while trying to delete the data."
-                        }
-                    });
-                }
-                else {
-                    resolve({
-                        code: 200,
-                        body: {
-                            message: "Item removed",
-                            info: "The item was removed from the cart succesfully"
-                        }
-                    });
-                }
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("DELETE FROM cart_item WHERE id = ?", [id], (error, results) => {
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(results.affectedRows);
             }
         })
     });

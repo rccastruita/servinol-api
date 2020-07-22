@@ -1,31 +1,8 @@
 const mysqlConnection = require('../database');
 const userModel = {};
 
-userModel.getAll = async () => {
-    return new Promise((resolve) => {
-        mysqlConnection.query("SELECT * FROM user", [], (error, results) => {
-            if (error) {
-                resolve({
-                    code: 500,
-                    body: {
-                        message: "Internal error",
-                        info: "An error ocurred while trying to retrieve the data.",
-                        error: error
-                    }
-                });
-            }
-            else {
-                resolve({
-                    code: 200,
-                    body: results
-                });
-            }
-        });
-    });
-};
-
 userModel.insert = async (user) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         mysqlConnection.query(
             "INSERT INTO user (email, password, name, role) VALUES (?, ?, ?, ?)",
             [
@@ -33,90 +10,68 @@ userModel.insert = async (user) => {
                 user.password,
                 user.name,
                 user.role
-            ], (error) => {
+            ], (error, results) => {
                 if (error) {
-                    resolve({
-                        code: 500,
-                        body: {
-                            message: "Internal error", 
-                            info: "An error ocurred while trying to submit the data",
-                            error: error
-                        }
-                    });
+                    reject(error);
                 }
                 else {
-                    resolve({
-                        code: 200,
-                        body: {
-                            message: "Registration complete",
-                            info: "User account registered succesfully."
-                        }
-                    });
+                    console.log("Created user id: ", results.insertId);
+                    resolve(user);
                 }
             }
         );
     });
 };
 
-userModel.select = async (email) => {
-    return new Promise((resolve) => {
-        mysqlConnection.query("SELECT * FROM user WHERE email = ?", [email], 
-        (error, results) => {
-            if(error) {
-                resolve({
-                    code: 500,
-                    body: {
-                        message: "Internal error",
-                        info: "An error ocurred while trying to query the data"
-                    }
-                });
-            }
-            else if (Array.isArray(results) && results.length > 0) {
-                resolve({
-                    code: 200,
-                    body: results[0]
-                });
+userModel.getAll = async () => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("SELECT * FROM user", [], (error, results) => {
+            if (error) {
+                reject(error);
             }
             else {
-                resolve({
-                    code: 404,
-                    body: {
-                        message: "Not found",
-                        info: "User not found in the database."
-                    }
-                });
+                resolve(results);
             }
         });
     });
 };
 
-userModel.update = async (user) => {
-    return new Promise((resolve) => {
+userModel.select = async (email) => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("SELECT * FROM user WHERE email = ?", [email], 
+        (error, results) => {
+            if(error) {
+                reject(error);
+            }
+            else if (Array.isArray(results) && results.length > 0) {
+                resolve(results[0]);
+            }
+            else {
+                reject();
+            }
+        });
+    });
+};
+
+userModel.update = async (id, data) => {
+    return new Promise((resolve, reject) => {
+        var query_string = "UPDATE user SET ";
+        Object.keys(data).forEach((key) => {
+            query_string += key + " = ?,";
+        });
+        
+        query_string = query_string.substring(0, query_string.length-1) + " WHERE email = ?";
+        query_data = Object.values(data);
+        query_data.push(id);
+
         mysqlConnection.query(
-            "UPDATE user SET password = ?, name = ?, role = ? WHERE email = ?",
-            [
-                user.password,
-                user.name,
-                user.role,
-                user.email
-            ], (error) => {
+            query_string,
+            query_data, (error) => {
                 if(error) {
-                    resolve({
-                        code: 500,
-                        body: {
-                            message: "Internal error",
-                            info: "An error ocurred while trying to update the data."
-                        }
-                    });
+                    reject(error);
                 }
                 else {
-                    resolve({
-                        code: 200,
-                        body: {
-                            message: "Info updated",
-                            info: "User account information updated succesfully."
-                        }
-                    });
+                    resolve();
                 }
             }
         );
@@ -124,28 +79,16 @@ userModel.update = async (user) => {
 };
 
 userModel.delete = async (email) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         mysqlConnection.query(
             "DELETE FROM user WHERE email = ?",
             [email],
-            (error) => {
+            (error, results) => {
                 if (error) {
-                    resolve({
-                        code: 500,
-                        body: {
-                            message: "Internal error",
-                            info: "An error ocurred while trying to delete the data."
-                        }
-                    });
+                    reject(error);
                 }
                 else {
-                    resolve({
-                        code: 200,
-                        body: {
-                            message: "User deleted",
-                            info: "The user account was deleted succesfully"
-                        }
-                    });
+                    resolve(results.affectedRows);
                 }
             }
         )
