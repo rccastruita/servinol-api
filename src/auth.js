@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const userModel = require('./models/user.model');
 const jwt = require('jwt-simple');
 const moment = require('moment');
+auth = {};
+
 
 const TOKEN_SECRET = "jvvL7rdRr1xBjETS79Wh";
 const FORBIDDEN = {
@@ -18,10 +20,6 @@ const EXPIRED = {
         info: "The current session has expired, please login again."
     }
 }
-
-
-
-auth = {};
 
 auth.prepareUser = async (user) => {
     return new Promise((resolve) => {

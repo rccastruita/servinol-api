@@ -1,7 +1,10 @@
 const productModel = require('../models/product.model');
 const moment = require('moment');
-const productController = {};
 const auth = require('../auth');
+const constants = require('../constants');
+const path = require('path');
+
+const productController = {};
 
 productController.get = async (req, res) => {
     console.log("GET product: " + req.params.id);
@@ -31,29 +34,40 @@ productController.post = async (req, res) => {
             product.slug = "null";
         }
     
-        if(!req.files || Object.keys(req.files).length === 0) {
-            product.image = 'default.jpg';
+        try {
+            product.image = await productController.saveImage(req.files.image);
+        } catch(error) {
+            console.dir(error);
+            return res.status('500').send(error);
         }
-        else {
-            
-            var imageFile = req.files.image;
-            var imageLocation = './resources/prod_img/_' + moment().unix() + "_" + imageFile.name;
-            imageFile.mv(imageLocation, (error) => {
-                if(error) {
-                    return res.status(500).json(error);
-                }
-            });
-    
-            product.image = imageLocation;
-        }
-    
+        
         var productModelResponse = await productModel.insert(req.body);
         res.status(productModelResponse.code).json(productModelResponse.body);
     });
 };
 
 productController.saveImage = async (image) => {
-
+    return new Promise((resolve, reject) => {
+        if(!image) {
+            resolve(constants.PRODUCT_ID + '0000.jpg');
+        }
+        else {
+            var imageRoute = 
+                'images/products/' 
+                + moment().unix() 
+                + Math.floor(Math.random()*9000 + 1000).toString()
+                + path.extname(image.name);
+            
+            image.mv('./resources/' + imageRoute, (error) => {
+                if(error) {
+                    reject(error);
+                }
+                else {
+                    resolve(imageRoute);
+                }
+            });
+        }
+    });
 }
 
 productController.put = async (req, res) => {
@@ -76,7 +90,7 @@ productController.delete = async (req, res) => {
         if(error) {
             return res.status(error.code).send(error.body);
         }
-        
+
         var productModelResponse = await productModel.delete(req.params.id);
         res.status(productModelResponse.code).json(productModelResponse.body);
     });
