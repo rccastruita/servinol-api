@@ -76,17 +76,18 @@ productController.post = async (req, res) => {
 productController.put = async (req, res) => {
     console.log("PUT product");
 
-    var isAuthorized = auth.checkAuthorization(req.headers.authorization, {
-        mode:1,
+    var isAuthorized = await auth.checkAuthorization(req.headers.authorization, {
+        mod:1,
         minConditions: 1
     });
 
     if(isAuthorized !== true) {
         console.log("Access denied");
-
+        
         if(isAuthorized == 'Token expired') {
             return res.status(401).send('Token expired');
         }
+
         return res.status(403).send("Forbidden");
     }
 

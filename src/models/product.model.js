@@ -67,6 +67,7 @@ productModel.select = async (id) => {
 
 productModel.update = async (id, data) => {
     return new Promise((resolve, reject) => {
+        id = parseInt(id);
         if(data.categories) {
             var delete_string = "DELETE FROM product_is_genre WHERE product_id = ";
             delete_string += mysqlConnection.escape(id) + " AND genre_id NOT IN ";
@@ -86,7 +87,7 @@ productModel.update = async (id, data) => {
             insert_string = "INSERT INTO product_is_genre(product_id, genre_id) "
             + "(SELECT "+mysqlConnection.escape(id)+" product_id, "
             + "g.id FROM genre g WHERE g.id NOT IN (SELECT genre_id FROM product_is_genre WHERE product_id = "
-            + mysqlConnection.escape(id)+") AND g.id IN" + categories_string;
+            + mysqlConnection.escape(id)+") AND g.id IN" + categories_string+")";
 
             mysqlConnection.query(insert_string, (error) => {
                 if(error)
