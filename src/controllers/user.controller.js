@@ -52,21 +52,13 @@ userController.getAll = async (req, res) => {
 
     if(isAuthorized !== true) {
         console.log("Access denied: " + isAuthorized);
-        if(isAuthorized == "Conditions failed") {
-            return res.status(403).send(isAuthorized);
-        }
+
         if(isAuthorized == "Token expired") {
-            return res.status(401).send(isAuthorized);
+            return res.status(401).send("Token expired");
         }
 
-        switch(isAuthorized.message) {
-            case "Not enough or too many segments":
-                console.log("Invalid token")
-                break;
-            default:
-                console.log(isAuthorized.toString());
-                break;
-            }
+        console.log(isAuthorized.toString());
+
         return res.status(403).send("Forbidden");
     }
 
@@ -92,13 +84,13 @@ userController.post = async (req, res) => {
         console.dir(createdUser);
         res.status(201).send(createdUser);
     } catch(error) {
-        if(error.code === 'ER_DUP_ENTRY') {
+        if(error.code === 'ER_BAD_NULL_ERROR') {
             console.log("Request rejected: Duplicate email");
-            res.status(400).send(error);
+            res.status(400).send("Duplicated email");
         }
         else {
             console.error(error);
-            res.status(500).send("Request failed: Internal error");
+            res.status(500).send("Internal error");
         }
     }
 }
@@ -135,10 +127,10 @@ userController.put = async (req, res) => {
         console.log("Access denied: " + isAuthorized);
 
         if(isAuthorized == "Token expired") {
-            return res.status(401).send(isAuthorized);
+            return res.status(401).send("Token expired");
         }
 
-        return res.status(403).send(isAuthorized);
+        return res.status(403).send("Forbidden");
     }
 
     try {
@@ -147,7 +139,7 @@ userController.put = async (req, res) => {
         return res.status(204).send("");
     } catch(error) {
         console.error(error);
-        return res.status(500).send("Request failed: Internal error");
+        return res.status(500).send("Internal error");
     }
 
 }
@@ -218,7 +210,7 @@ userController.login = async (req, res) => {
         }
         else {
             console.log("User not found");
-            return res.status(401).send("Wrong credentials");
+            return res.status(404).send("User not found");
         }
     }
 };

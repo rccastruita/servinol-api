@@ -16,34 +16,55 @@ productController.get = async (req, res) => {
 productController.getAll = async (req, res) => {
     console.log("GET all products");
 
-    var productModelResponse = await productModel.getAll();
-    res.status(productModelResponse.code).json(productModelResponse.body);
+    try {
+        products = await productModel.getAll();
+        res.status(200).send(products);
+    } catch(error) {
+        console.error(error);
+        res.status(500).send(error);
+    }
 };
 
 productController.post = async (req, res) => {
-    console.log("POST product");
+    console.log("POST requested at /products");
     console.log("req.body: ");
     console.dir(req.body);
 
-    auth.checkAuthorization(req.headers.authorization, {mod: 1}, async (error) => {
-        if(error) {
-            return res.status(error.code).send(error.body);
-        }
-        var product = req.body;
-        if(!product.slug) {
-            product.slug = "null";
-        }
-    
-        try {
-            product.image = await productController.saveImage(req.files.image);
-        } catch(error) {
-            console.dir(error);
-            return res.status('500').send(error);
-        }
-        
-        var productModelResponse = await productModel.insert(req.body);
-        res.status(productModelResponse.code).json(productModelResponse.body);
+    var isAuthorized = await auth.checkAuthorization(req.headers.authorization, {
+        mod: 1,
+        minConditions: 1
     });
+
+    if(isAuthorized !== true) {
+        console.log("Access denied");
+
+        if(isAuthorized == 'Token expired') {
+            return res.status(401).send(isAuthorized);
+        }
+        res.status(403).send(isAuthorized);
+    }
+
+    var product = req.body;
+    if(!product.slug) {
+        product.slug = "/pending";
+    }
+
+    try {
+        product.image = await productController.saveImage(req.files.image);
+    } catch(error) {
+        console.dir(error);
+        return res.status('500').send(error);
+    }
+    
+    try {
+        var createdProduct = await productModel.insert(req.body);
+        console.log("Request successful");
+        console.dir(createdProduct);
+        res.status(201).send(createdProduct);
+    } catch(error) {
+        console.error(error);
+        res.status(500).send("Internal error");
+    }
 };
 
 productController.saveImage = async (image) => {
