@@ -98,10 +98,10 @@ userController.post = async (req, res) => {
 userController.put = async (req, res) => {
     console.log("PUT request to /users/" + req.params.id);
 
-    if(req.body.id || req.body.email) {
+    /*if(req.body.id || req.body.email) {
         console.log("Request rejected: Tried to update fixed value");
         return res.status(400).send("Tried to update fixed value");
-    }
+    }*/
 
     if(req.body.password) {
         req.body.password = await auth.hashPassword(req.body.password);
@@ -157,10 +157,10 @@ userController.delete = async (req, res) => {
         console.log("Access denied: " + isAuthorized);
 
         if(isAuthorized == "Token expired") {
-            return res.status(401).send(isAuthorized);
+            return res.status(401).send("Token expired");
         }
 
-        return res.status(403).send(isAuthorized);
+        return res.status(403).send("Forbidden");
     }
     
     console.log("Request accepted");
@@ -169,7 +169,7 @@ userController.delete = async (req, res) => {
 
         if(affectedRows == 0) {
             console.log("Request failed: User not found");
-            return res.status(404).send("User not found");
+            return res.status(404).send("Not found");
         }
 
         console.log("Request successful");

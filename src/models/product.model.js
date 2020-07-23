@@ -1,4 +1,5 @@
 const mysqlConnection = require('../database');
+const genreModel = require('./genre.model');
 const productModel = {};
 
 productModel.insert = async (product) => {
@@ -21,11 +22,20 @@ productModel.insert = async (product) => {
 
 productModel.getAll = async () => {
     return new Promise((resolve, reject) => {
-        mysqlConnection.query("SELECT * FROM product", [], (error, results) => {
+        mysqlConnection.query("SELECT * FROM product", [], async (error, results) => {
             if (error) {
                 reject(error);
             }
             else {
+                try {
+                    for(var i=0; i<results.length; i++) {
+                        results[i].categories = await genreModel.getAllFor(results[i].id);
+
+                    }
+                } catch(categoriesError) {
+                    reject(categoriesError);
+                }
+                
                 resolve(results);
             }
         });
@@ -35,12 +45,18 @@ productModel.getAll = async () => {
 productModel.select = async (id) => {
     return new Promise((resolve, reject) => {
         mysqlConnection.query("SELECT * FROM product WHERE id = ?", [id], 
-        (error, results, fields) => {
+        async (error, results) => {
             if(error) {
                 reject(error);
             }
             else if (Array.isArray(results) && results.length > 0) {
-                resolve(results[0]);
+                console.dir(results[0]);
+                try {
+                    results[0].categories = await genreModel.getAllFor(results[0].id);
+                    resolve(results[0]);
+                } catch(categoriesError) {
+                    reject(categoriesError);
+                }
             }
             else {
                 reject();
@@ -51,6 +67,34 @@ productModel.select = async (id) => {
 
 productModel.update = async (id, data) => {
     return new Promise((resolve, reject) => {
+        if(data.categories) {
+            var delete_string = "DELETE FROM product_is_genre WHERE product_id = ";
+            delete_string += mysqlConnection.escape(id) + " AND genre_id NOT IN ";
+
+            var categories_string = "("
+            data.categories.forEach((category) => {
+                categories_string += mysqlConnection.escape(category.id) + ",";
+            });
+            categories_string = categories_string.substring(0, categories_string.length-1) + ")";
+
+            delete_string += categories_string;
+            mysqlConnection.query(delete_string , (error) => {
+                if(error)
+                    reject(error);
+            })
+
+            insert_string = "INSERT INTO product_is_genre(product_id, genre_id) "
+            + "(SELECT "+mysqlConnection.escape(id)+" product_id, "
+            + "g.id FROM genre g WHERE g.id NOT IN (SELECT genre_id FROM product_is_genre WHERE product_id = "
+            + mysqlConnection.escape(id)+") AND g.id IN" + categories_string;
+
+            mysqlConnection.query(insert_string, (error) => {
+                if(error)
+                    reject(error);
+            });
+            delete data.categories;
+        }
+
         var query_string = "UPDATE product SET ";
         Object.keys(data).forEach((key) => {
             query_string += key + " = ?,";
