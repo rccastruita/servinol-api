@@ -1,10 +1,10 @@
 const mysqlConnection = require('../database');
 const purchaseModel = {};
 
-purchaseModel.insert = async (user_email) => {
+purchaseModel.insert = async (user_id) => {
     return new Promise((resolve, reject) => {
         mysqlConnection.query(
-            "INSERT INTO purchase (user_email) VALUES (?)", [user_email], 
+            "INSERT INTO purchase (user_id) VALUES (?)", [user_id], 
             (error, results) => {
                 if (error) {
                     reject(error);
@@ -34,9 +34,52 @@ purchaseModel.getAll = async () => {
     });
 }
 
+purchaseModel.getUserPurchaseHistory = async (user_id) => {
+    return new Promise((resolve, reject) => {
+        var sql_string = 
+            "SELECT a.id, a.user_id, a.purchase_timestamp, SUM(b.price*c.quantity) AS total "
+            + "FROM purchase AS a RIGHT JOIN purchase_item AS c ON a.id = c.purchase_id "
+            + "JOIN product AS b ON c.product_id = b.id GROUP BY a.id "
+            + "WHERE a.user_id = " + mysqlConnection.escape(user_id);
+
+        mysqlConnection.query(sql_string, (error, results) => {
+            if(error) {
+                reject(error);
+            }
+            else {
+                resolve(results);
+            }
+        });
+    });
+};
+
+purchaseModel.getPurchaseItems = async (id) => {
+    return new Promise((resolve, reject) => {
+        var sql_string = "SELECT a.id, a.name, a.image, a.price, b.quantity, a.price*b.quantity subtotal "
+        + "FROM product AS a JOIN purchase_item AS b ON a.id = b.product_id "
+        + "WHERE b.purchase_id = " + mysqlConnection.escape(id);
+
+        mysqlConnection.query(sql_string, (error, results) => {
+            if(error) {
+                reject(error);
+            }
+            else {
+                resolve(results);
+            }
+        });
+    });
+};
+
 purchaseModel.select = async (id) => {
     return new Promise((resolve, reject) => {
-        mysqlConnection.query("SELECT * FROM purchase WHERE id = ?", [id], (error, results) => {
+        var sql_string = 
+            "SELECT a.id, a.user_id, a.purchase_timestamp, SUM(b.price*c.quantity) AS total "
+            + "FROM purchase AS a RIGHT JOIN purchase_item AS c ON a.id = c.purchase_id "
+            + "JOIN product AS b ON c.product_id = b.id "
+            + "WHERE a.id = " + mysqlConnection.escape(id)
+            + "GROUP BY a.id "
+
+        mysqlConnection.query(sql_string, (error, results) => {
             if(error) {
                 reject(error);
             }

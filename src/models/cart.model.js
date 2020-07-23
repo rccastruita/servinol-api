@@ -1,28 +1,55 @@
 const mysqlConnection = require('../database');
-const cartItemModel = {};
+const cartModel = {};
 
-cartItemModel.insert = async (cartItem) => {
+cartModel.insert = async (cart) => {
     return new Promise((resolve, reject) => {
         mysqlConnection.query(
             "INSERT INTO cart_item (user_email, product_id, quantity) VALUES (?, ?, ?)",
             [
-                cartItem.user_email,
-                cartItem.product_id,
-                cartItem.quantity
+                cart.user_email,
+                cart.product_id,
+                cart.quantity
             ], (error, results) => {
                 if (error) {
                     reject(error);
                 }
                 else {
-                    cartItem.id = results.insertId;
-                    resolve(cartItem);
+                    cart.id = results.insertId;
+                    resolve(cart);
                 }
             }
         );
     });
 }
 
-cartItemModel.select = async (id) => {
+cartModel.getAll = async() => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("SELECT * FROM cart_item", (error, results) => {
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(results);
+            }
+        });
+    });
+};
+
+cartModel.getUserCart = async(user_id) => {
+    return new Promise((resolve, reject) => {
+        mysqlConnection.query("SELECT * FROM cart_item WHERE user_id = ?", 
+            [user_id], (error, results) => {
+                if(error) {
+                    reject(error);
+                }
+                else {
+                    resolve(results);
+                }
+            });
+    });
+};
+
+cartModel.select = async (id) => {
     return new Promise((resolve, reject) => {
         mysqlConnection.query("SELECT * FROM cart_item WHERE id = ?", [id], (error, results) => {
             if(error) {
@@ -38,7 +65,7 @@ cartItemModel.select = async (id) => {
     });
 }
 
-cartItemModel.update = async (id, data) => {
+cartModel.update = async (id, data) => {
     return new Promise((resolve, reject) => {
         var query_string = "UPDATE cart_item SET ";
         Object.keys(data).forEach((key) => {
@@ -60,7 +87,7 @@ cartItemModel.update = async (id, data) => {
     });
 }
 
-cartItemModel.delete = async (id) => {
+cartModel.delete = async (id) => {
     return new Promise((resolve, reject) => {
         mysqlConnection.query("DELETE FROM cart_item WHERE id = ?", [id], (error, results) => {
             if (error) {
@@ -73,4 +100,4 @@ cartItemModel.delete = async (id) => {
     });
 }
 
-module.exports = cartItemModel;
+module.exports = cartModel;

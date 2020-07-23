@@ -73,6 +73,8 @@ CREATE TABLE purchase(
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
 
+ALTER TABLE purchase AUTO_INCREMENT = 4000;
+
 CREATE TABLE purchase_item(
     purchase_id int NOT NULL,
     product_id INT NOT NULL,

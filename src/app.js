@@ -18,6 +18,7 @@ app.use(fileUpload({
 app.use('/api/users',require('./routes/user.routes'));
 app.use('/api/products', require('./routes/product.routes'));
 app.use('/api/genres', require('./routes/genre.routes'));
+app.use('/api/purchases', require('./routes/purchase.routes'));
 
 //Starting server
 app.listen(app.get('port'), () => {
