@@ -196,7 +196,8 @@ userController.login = async (req, res) => {
             }
             if(result) { // Correct password
                 console.log("Authentication succesfull, sending token...");
-                return res.status(200).json(auth.createToken(user));
+                res.set("Authorization", auth.createToken(user));
+                return res.status(200).send("User authenticated");
             }
             else {  // Wrong password
                 console.log("Wrong password");

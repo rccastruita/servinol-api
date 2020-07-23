@@ -46,14 +46,15 @@ genreModel.select = async (id) => {
     });
 }
 
-genreModel.insert = async (name) => {
+genreModel.insert = async (genre) => {
     return new Promise((resolve, reject) => {
-        mysqlConnection.query('INSERT INTO genre(name) VALUES (?)', [name], (error, results) =>{
+        mysqlConnection.query('INSERT INTO genre(name) VALUES (?)', [genre.name], (error, results) =>{
             if(error) {
                 reject(error);
             }
             else {
-                resolve({id: results.insertId, name: name});
+                genre.id = results.insertId;
+                resolve(genre);
             }
         });
     });

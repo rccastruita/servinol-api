@@ -1,19 +1,29 @@
-const productModel = require('../models/product.model');
 const genreModel = require('../models/genre.model');
-const auth = require('../auth');
 
-const productController = {};
+const genreController = {};
 
-productController.get = async (req, res) => {
-    console.log("GET request at /products/" + req.params.id);
+genreController.getAll = async (req, res) => {
+    console.log("GET request at /genres");
 
     try {
-        var product = await productModel.select(req.params.id);
-        res.status(200).send(product);
+        genres = await genreModel.getAll();
+        res.status(200).send(genres);
+    } catch(error) {
+        console.error(error);
+        res.status(500).send(error);
+    }
+};
+
+genreController.get = async (req, res) => {
+    console.log("GET request at /genres/" + req.params.id);
+
+    try {
+        var genre = await genreModel.select(req.params.id);
+        res.status(200).send(genre);
     }
     catch(error) {
         if(!error) {
-            console.log("product not found");
+            console.log("Genre not found");
             res.status(404).send("Not found");
         }
         else {
@@ -21,22 +31,10 @@ productController.get = async (req, res) => {
             res.status(500).send("Internal error");
         }
     }
-};
+}
 
-productController.getAll = async (req, res) => {
-    console.log("GET request at /products");
-
-    try {
-        products = await productModel.getAll();
-        res.status(200).send(products);
-    } catch(error) {
-        console.error(error);
-        res.status(500).send(error);
-    }
-};
-
-productController.post = async (req, res) => {
-    console.log("POST request at /products");
+genreController.post = async (req, res) => {
+    console.log("POST request at /genres")
     console.log("req.body: ");
     console.dir(req.body);
 
@@ -53,28 +51,28 @@ productController.post = async (req, res) => {
         }
         return res.status(403).send("Forbidden");
     }
-
-    var product = req.body;
-    if(!product.slug) {
-        product.slug = "/pending";
-    }
     
+
+    var genre = req.body;
+
+    if(!genre.name) {
+        genre = {name: req.body};
+    }
+
     try {
-        var createdProduct = await productModel.insert(req.body);
+        var createdGenre = await genreModel.insert(genre);
         console.log("Request successful");
-        console.dir(createdProduct);
+        console.dir(createdGenre);
         
-        await genreModel.addToProduct(createdProduct.id, createdProduct.categories);
-        
-        return res.status(201).send(createdProduct);
+        return res.status(201).send(createdGenre);
     } catch(error) {
         console.error(error);
         return res.status(500).send("Internal error");
-    }
+    }    
 };
 
-productController.put = async (req, res) => {
-    console.log("PUT request at /products/" + req.params.id);
+genreController.put = async (req, res) => {
+    console.log("PUT request at /genres/" + req.params.id);
 
     var isAuthorized = await auth.checkAuthorization(req.headers.authorization, {
         mod:1,
@@ -92,7 +90,7 @@ productController.put = async (req, res) => {
     }
 
     try {
-        await productModel.update(req.params.id, req.body);
+        await genreModel.update(req.params.id, req.body);
         console.log("Request successful");
         return res.status(204).send("");
     } catch(error) {
@@ -104,8 +102,8 @@ productController.put = async (req, res) => {
     }
 };
 
-productController.delete = async (req, res) => {
-    console.log("DELETE request at /products/" + req.params.id);
+genreController.delete = async (req, res) => {
+    console.log("DELETE request at /genres/" + req.params.id);
 
     var isAuthorized = await auth.checkAuthorization(req.headers.authorization, {
         mod: 1,
@@ -124,15 +122,15 @@ productController.delete = async (req, res) => {
     }
 
     try {
-        var product = await productModel.select(req.params.id);
+        var genre = await genreModel.select(req.params.id);
 
-        await productModel.delete(req.params.id);
+        await genreModel.delete(req.params.id);
         console.log("Deleted");
         return res.status(204).send("");
 
     } catch(modelError) {
         if(!modelError) {
-            console.log("Product not found");
+            console.log("Genre not found");
             return res.status(404).send("Not found");
         }
         else {
@@ -142,4 +140,5 @@ productController.delete = async (req, res) => {
     }
 };
 
-module.exports = productController;
+
+module.exports = genreController;
