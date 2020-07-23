@@ -1,12 +1,14 @@
 const express = require('express')
 const app = express();
 const fileUpload = require('express-fileupload');
+const cors = require('cors')
 
 //Settings
 app.set('port', process.env.PORT || 3000);
 
 //Middlewares
 app.use(express.json());
+app.use(cors());
 app.use(fileUpload({
   useTempFiles: true,
   tempFileDir: './resources/tmp/'
